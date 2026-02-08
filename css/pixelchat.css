@@ -1,3 +1,8 @@
+/* ==========================================
+   PIXEL ART + CHAT - COMBINED STYLES
+   With Admin Features & 64x64 Grid
+   ========================================== */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -7,7 +12,7 @@
 .pixel-chat-app {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   background: #1a1a2e;
   border-radius: 16px;
@@ -50,6 +55,18 @@
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 14px;
+}
+
+/* Admin badge in header */
+.username-display.admin {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.username-display.admin::before {
+  content: '👑 ';
 }
 
 .online-count {
@@ -145,16 +162,16 @@
    ========================================== */
 .main-container {
   display: flex;
-  height: 600px;
+  height: 700px;
 }
 
 /* ==========================================
-   PIXEL ART SECTION (Left)
+   PIXEL ART SECTION (Left) - BIGGER
    ========================================== */
 .pixel-section {
-  flex: 1;
+  flex: 1.5;
   background: #16213e;
-  padding: 20px;
+  padding: 15px;
   display: flex;
   flex-direction: column;
   border-right: 1px solid #2d3a5f;
@@ -164,7 +181,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .pixel-header h3 {
@@ -179,9 +196,12 @@
   color: #8892b0;
   font-size: 12px;
   font-family: monospace;
+  background: #0d1321;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
-/* Canvas Container */
+/* Canvas Container - Bigger */
 .canvas-container {
   flex: 1;
   display: flex;
@@ -190,15 +210,17 @@
   background: #0d1321;
   border-radius: 12px;
   padding: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
+  overflow: auto;
 }
 
+/* 64x64 Grid */
 .pixel-canvas {
   display: grid;
-  grid-template-columns: repeat(32, 1fr);
+  grid-template-columns: repeat(64, 1fr);
   gap: 0;
   width: 100%;
-  max-width: 320px;
+  max-width: 512px;
   aspect-ratio: 1;
   background: #2d3a5f;
   border-radius: 4px;
@@ -209,52 +231,53 @@
   aspect-ratio: 1;
   background: #1a1a2e;
   cursor: pointer;
-  transition: transform 0.1s;
-  border: 0.5px solid rgba(255,255,255,0.05);
+  transition: transform 0.05s;
+  border: 0.25px solid rgba(255,255,255,0.03);
 }
 
 .pixel:hover {
-  transform: scale(1.3);
+  transform: scale(1.5);
   z-index: 10;
   border: 1px solid white;
+  box-shadow: 0 0 10px rgba(255,255,255,0.5);
 }
 
-/* Color Palette */
+/* Color Palette - Compact */
 .color-palette {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   justify-content: center;
-  padding: 10px;
+  padding: 8px;
   background: #0d1321;
   border-radius: 10px;
 }
 
 .color-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .color-btn:hover {
-  transform: scale(1.15);
+  transform: scale(1.2);
 }
 
 .color-btn.selected {
   border-color: white;
   box-shadow: 0 0 10px rgba(255,255,255,0.5);
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 /* Cooldown indicator */
 .cooldown-bar {
-  height: 4px;
+  height: 3px;
   background: #2d3a5f;
   border-radius: 2px;
-  margin-top: 10px;
+  margin-top: 8px;
   overflow: hidden;
 }
 
@@ -269,7 +292,7 @@
    CHAT SECTION (Right)
    ========================================== */
 .chat-section {
-  width: 320px;
+  width: 350px;
   display: flex;
   flex-direction: column;
   background: #f5f7fb;
@@ -329,6 +352,49 @@
   align-self: flex-end;
 }
 
+/* ==========================================
+   ADMIN MESSAGE STYLES
+   ========================================== */
+.chat-message.admin-message {
+  max-width: 95%;
+}
+
+.chat-message.admin-message .message-author {
+  color: #FFD700 !important;
+  font-weight: 700;
+}
+
+.chat-message.admin-message .message-author::before {
+  content: '👑 ';
+}
+
+.chat-message.admin-message .message-content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #2d3a5f 100%);
+  color: #fff;
+  border: 2px solid #FFD700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.chat-message.admin-message.own .message-content {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #000;
+  border: none;
+  font-weight: 500;
+}
+
+/* Admin badge */
+.admin-badge {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+  text-transform: uppercase;
+}
+
+/* Regular message styles */
 .message-author {
   font-size: 11px;
   font-weight: 600;
@@ -439,6 +505,23 @@
   cursor: not-allowed;
 }
 
+/* Admin notification */
+.admin-granted-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+  z-index: 9999;
+  animation: slideDown 0.5s ease, fadeOut 0.5s ease 2.5s forwards;
+}
+
 /* ==========================================
    ANIMATIONS
    ========================================== */
@@ -458,6 +541,15 @@
   75% { transform: translateX(5px); }
 }
 
+@keyframes slideDown {
+  from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
 .shake {
   animation: shake 0.3s ease;
 }
@@ -465,15 +557,19 @@
 /* ==========================================
    SCROLLBAR
    ========================================== */
-.chat-messages::-webkit-scrollbar {
+.chat-messages::-webkit-scrollbar,
+.canvas-container::-webkit-scrollbar {
   width: 5px;
+  height: 5px;
 }
 
-.chat-messages::-webkit-scrollbar-track {
+.chat-messages::-webkit-scrollbar-track,
+.canvas-container::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.chat-messages::-webkit-scrollbar-thumb {
+.chat-messages::-webkit-scrollbar-thumb,
+.canvas-container::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 3px;
 }
@@ -481,7 +577,7 @@
 /* ==========================================
    RESPONSIVE
    ========================================== */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .main-container {
     flex-direction: column;
     height: auto;
@@ -490,32 +586,40 @@
   .pixel-section {
     border-right: none;
     border-bottom: 1px solid #2d3a5f;
-    min-height: 400px;
+    min-height: 450px;
   }
   
   .chat-section {
     width: 100%;
-    height: 350px;
+    height: 400px;
   }
   
   .pixel-canvas {
-    max-width: 280px;
+    max-width: 400px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 500px) {
   .app-header {
     flex-direction: column;
     gap: 10px;
   }
   
   .pixel-canvas {
-    max-width: 240px;
+    max-width: 320px;
   }
   
   .color-btn {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .main-container {
+    height: auto;
+  }
+  
+  .pixel-section {
+    min-height: 380px;
   }
 }
 

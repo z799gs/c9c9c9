@@ -1,18 +1,27 @@
+// ==========================================
+// PIXEL ART + CHAT - COMBINED APP
+// With Admin System & 64x64 Grid
+// ==========================================
+
 const PixelChatApp = (function() {
   'use strict';
 
-
+  // ==========================================
+  // CONFIG
+  // ==========================================
   const CONFIG = {
-    API_URL: 'https://script.google.com/macros/s/AKfycby3c8CfT7ufe2tt9zgQZtxETQdftBy95Fackcy64qjLpGCQ_clhQLsW0qI7j1jNGbJ4/exec',
+    API_URL: 'https://script.google.com/macros/s/AKfycbwtfYtRXYNWqF2cgkqwTIz3F7X-MOiJyzuZXR0XWf6bAHp7AqB75Dd4jQMbsA124h3R/exec',
     CHAT_POLL_INTERVAL: 5000,
     PIXEL_POLL_INTERVAL: 3000,
-    GRID_SIZE: 32,
+    GRID_SIZE: 64, // Bigger grid!
     COLORS: [
       '#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF',
       '#FFFF00', '#FF00FF', '#00FFFF', '#FF8000', '#8000FF',
       '#0080FF', '#FF0080', '#80FF00', '#00FF80', '#808080',
       '#C0C0C0', '#800000', '#008000', '#000080', '#808000',
-      '#800080', '#008080', '#FFC0CB', '#FFD700', '#A52A2A'
+      '#800080', '#008080', '#FFC0CB', '#FFD700', '#A52A2A',
+      '#4B0082', '#EE82EE', '#FA8072', '#7FFFD4', '#D2691E',
+      '#DC143C', '#00CED1', '#9400D3', '#FF1493', '#1E90FF'
     ]
   };
 
@@ -30,7 +39,8 @@ const PixelChatApp = (function() {
     isConnected: false,
     isFetching: false,
     canPlacePixel: true,
-    pixels: {}
+    pixels: {},
+    isAdmin: false
   };
 
   let elements = {};
@@ -43,11 +53,14 @@ const PixelChatApp = (function() {
     if (!container) return;
 
     state.username = localStorage.getItem('pixelChatUsername') || '';
+    state.isAdmin = localStorage.getItem('pixelChatAdmin') === 'true';
+    
     renderApp(container);
 
     if (state.username) {
       showMainApp();
       startPolling();
+      checkAdminStatus();
     }
   }
 
@@ -91,7 +104,7 @@ const PixelChatApp = (function() {
             <!-- Pixel Art Section -->
             <div class="pixel-section">
               <div class="pixel-header">
-                <h3>🖼️ Canvas</h3>
+                <h3>🖼️ Canvas (64x64)</h3>
                 <span class="pixel-coords" id="pixel-coords">X: - Y: -</span>
               </div>
               
@@ -173,23 +186,55 @@ const PixelChatApp = (function() {
   }
 
   function bindEvents() {
-    // Login
     elements.joinBtn.addEventListener('click', handleJoin);
     elements.usernameInput.addEventListener('keypress', e => {
       if (e.key === 'Enter') handleJoin();
     });
 
-    // Logout
     elements.logoutBtn.addEventListener('click', handleLogout);
-
-    // Room change
     elements.roomSelect.addEventListener('change', handleRoomChange);
 
-    // Chat
     elements.sendBtn.addEventListener('click', handleSendMessage);
     elements.messageInput.addEventListener('keypress', e => {
       if (e.key === 'Enter') handleSendMessage();
     });
+  }
+
+  // ==========================================
+  // ADMIN FUNCTIONS
+  // ==========================================
+  async function checkAdminStatus() {
+    try {
+      const url = `${CONFIG.API_URL}?action=getConfig&username=${encodeURIComponent(state.username)}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.success && data.isAdmin) {
+        setAdminStatus(true);
+      }
+    } catch (e) {
+      console.error('Admin check failed:', e);
+    }
+  }
+
+  function setAdminStatus(isAdmin) {
+    state.isAdmin = isAdmin;
+    localStorage.setItem('pixelChatAdmin', isAdmin ? 'true' : 'false');
+    
+    if (isAdmin) {
+      elements.userDisplay.classList.add('admin');
+    } else {
+      elements.userDisplay.classList.remove('admin');
+    }
+  }
+
+  function showAdminNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'admin-granted-notification';
+    notification.textContent = '👑 Admin Access Granted!';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 3000);
   }
 
   // ==========================================
@@ -214,11 +259,12 @@ const PixelChatApp = (function() {
   }
 
   // ==========================================
-  // PIXEL GRID
+  // PIXEL GRID - 64x64
   // ==========================================
   function renderPixelGrid() {
     const grid = elements.pixelCanvas;
     grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${CONFIG.GRID_SIZE}, 1fr)`;
 
     for (let y = 0; y < CONFIG.GRID_SIZE; y++) {
       for (let x = 0; x < CONFIG.GRID_SIZE; x++) {
@@ -254,9 +300,10 @@ const PixelChatApp = (function() {
 
   async function placePixel(x, y, color) {
     state.canPlacePixel = false;
-    startCooldown();
+    
+    const cooldownTime = state.isAdmin ? 200 : 500;
+    startCooldown(cooldownTime);
 
-    // Optimistic update
     updatePixelColor(x, y, color);
 
     try {
@@ -276,7 +323,7 @@ const PixelChatApp = (function() {
 
     setTimeout(() => {
       state.canPlacePixel = true;
-    }, 1000);
+    }, cooldownTime);
   }
 
   function updatePixelColor(x, y, color) {
@@ -288,12 +335,12 @@ const PixelChatApp = (function() {
     state.pixels[`${x}_${y}`] = color;
   }
 
-  function startCooldown() {
+  function startCooldown(duration) {
     elements.cooldownBar.style.width = '100%';
     elements.cooldownBar.style.transition = 'none';
     
     setTimeout(() => {
-      elements.cooldownBar.style.transition = 'width 1s linear';
+      elements.cooldownBar.style.transition = `width ${duration}ms linear`;
       elements.cooldownBar.style.width = '0%';
     }, 50);
   }
@@ -314,6 +361,7 @@ const PixelChatApp = (function() {
     
     showMainApp();
     startPolling();
+    checkAdminStatus();
   }
 
   function handleLogout() {
@@ -321,12 +369,15 @@ const PixelChatApp = (function() {
     state.username = '';
     state.lastChatTimestamp = 0;
     state.displayedTimestamps.clear();
+    state.isAdmin = false;
     localStorage.removeItem('pixelChatUsername');
+    localStorage.removeItem('pixelChatAdmin');
 
     elements.mainApp.classList.add('hidden');
     elements.loginScreen.classList.remove('hidden');
     elements.usernameInput.value = '';
     elements.chatMessages.innerHTML = '<div class="chat-welcome">👋 Welcome! Draw pixels and chat!</div>';
+    elements.userDisplay.classList.remove('admin');
   }
 
   function handleRoomChange() {
@@ -338,16 +389,29 @@ const PixelChatApp = (function() {
     fetchMessages();
   }
 
-  function handleSendMessage() {
+  async function handleSendMessage() {
     const message = elements.messageInput.value.trim();
     if (!message) return;
+
+    // Check for admin command
+    if (message.toLowerCase().startsWith('/admin ')) {
+      elements.messageInput.value = '';
+      await tryAdminLogin(message.substring(7).trim());
+      return;
+    }
 
     elements.messageInput.value = '';
     elements.messageInput.disabled = true;
     elements.sendBtn.disabled = true;
 
     sendMessage(message)
-      .then(() => setTimeout(fetchMessages, 500))
+      .then((response) => {
+        if (response && response.adminGranted) {
+          setAdminStatus(true);
+          showAdminNotification();
+        }
+        setTimeout(fetchMessages, 500);
+      })
       .catch(err => {
         elements.messageInput.value = message;
         alert('Failed to send');
@@ -359,21 +423,62 @@ const PixelChatApp = (function() {
       });
   }
 
+  async function tryAdminLogin(code) {
+    try {
+      const response = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'adminLogin',
+          username: state.username,
+          code: code
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.isAdmin) {
+        setAdminStatus(true);
+        showAdminNotification();
+      } else {
+        alert('Invalid admin code');
+      }
+    } catch (e) {
+      console.error('Admin login failed:', e);
+    }
+  }
+
   // ==========================================
   // API CALLS
   // ==========================================
   async function sendMessage(message) {
-    await fetch(CONFIG.API_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'sendMessage',
-        room: state.currentRoom,
-        username: state.username,
-        message: message
-      })
-    });
+    try {
+      const response = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sendMessage',
+          room: state.currentRoom,
+          username: state.username,
+          message: message
+        })
+      });
+      return await response.json();
+    } catch (e) {
+      // Fallback to no-cors
+      await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sendMessage',
+          room: state.currentRoom,
+          username: state.username,
+          message: message
+        })
+      });
+      return {};
+    }
   }
 
   async function fetchMessages() {
@@ -429,6 +534,11 @@ const PixelChatApp = (function() {
     elements.loginScreen.classList.add('hidden');
     elements.mainApp.classList.remove('hidden');
     elements.userDisplay.textContent = state.username;
+    
+    if (state.isAdmin) {
+      elements.userDisplay.classList.add('admin');
+    }
+    
     elements.chatMessages.innerHTML = `<div class="chat-welcome">👋 Welcome, ${escapeHtml(state.username)}!</div>`;
     elements.messageInput.focus();
   }
@@ -436,16 +546,20 @@ const PixelChatApp = (function() {
   function renderMessages(messages) {
     messages.forEach(msg => {
       const isOwn = msg.username === state.username;
+      const isAdminMsg = msg.isAdmin;
       const time = new Date(msg.timestamp).toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
       });
 
       const el = document.createElement('div');
-      el.className = `chat-message ${isOwn ? 'own' : ''}`;
+      el.className = `chat-message ${isOwn ? 'own' : ''} ${isAdminMsg ? 'admin-message' : ''}`;
+      
+      const adminBadge = isAdminMsg ? '<span class="admin-badge">Admin</span>' : '';
+      
       el.innerHTML = `
         <div class="message-author">
-          ${escapeHtml(msg.username)}
+          ${escapeHtml(msg.username)}${adminBadge}
           <span class="message-time">${time}</span>
         </div>
         <div class="message-content">${escapeHtml(msg.message)}</div>
