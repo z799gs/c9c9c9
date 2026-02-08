@@ -1,13 +1,7 @@
-// ==========================================
-// PIXEL ART + CHAT - COMBINED APP
-// ==========================================
-
 const PixelChatApp = (function() {
   'use strict';
 
-  // ==========================================
-  // CONFIG
-  // ==========================================
+
   const CONFIG = {
     API_URL: 'https://script.google.com/macros/s/AKfycby3c8CfT7ufe2tt9zgQZtxETQdftBy95Fackcy64qjLpGCQ_clhQLsW0qI7j1jNGbJ4/exec',
     CHAT_POLL_INTERVAL: 5000,
