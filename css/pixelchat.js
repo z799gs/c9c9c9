@@ -425,26 +425,40 @@ const PixelChatApp = (function() {
 
   async function tryAdminLogin(code) {
     try {
-      const response = await fetch(CONFIG.API_URL, {
+      // Send as regular message - server handles /admin command
+      await fetch(CONFIG.API_URL, {
         method: 'POST',
+        mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'adminLogin',
+          action: 'sendMessage',
+          room: state.currentRoom,
           username: state.username,
-          code: code
+          message: '/admin ' + code
         })
       });
       
-      const data = await response.json();
+      // Check admin status after a short delay
+      setTimeout(async () => {
+        try {
+          const url = `${CONFIG.API_URL}?action=getConfig&username=${encodeURIComponent(state.username)}`;
+          const response = await fetch(url);
+          const data = await response.json();
+          
+          if (data.success && data.isAdmin) {
+            setAdminStatus(true);
+            showAdminNotification();
+          } else {
+            alert('Invalid admin code');
+          }
+        } catch (e) {
+          alert('Could not verify admin status');
+        }
+      }, 1500);
       
-      if (data.success && data.isAdmin) {
-        setAdminStatus(true);
-        showAdminNotification();
-      } else {
-        alert('Invalid admin code');
-      }
     } catch (e) {
       console.error('Admin login failed:', e);
+      alert('Admin login failed');
     }
   }
 
