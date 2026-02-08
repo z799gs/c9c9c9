@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+  <ModulePrefs title="Pixel Chat" height="750" />
+  <Content type="html"><![CDATA[
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- CSS via jsDelivr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/USERNAME/REPO@main/pixelchat.css">
+</head>
+<body style="margin:0; padding:0; background:#1a1a2e;">
+
+  <div id="pixel-chat-container"></div>
+
+  <!-- JS via jsDelivr -->
+  <script src="https://cdn.jsdelivr.net/gh/USERNAME/REPO@main/pixelchat.js"></script>
+  
+  <script>
+    // Update with your Apps Script URL after deployment
+    PixelChatApp.setApiUrl('YOUR_APPS_SCRIPT_URL_HERE');
+    PixelChatApp.init('pixel-chat-container');
+  </script>
+
+</body>
+</html>
+  ]]></Content>
+</Module>
