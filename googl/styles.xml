@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/z799gs/c9c9c9@main/fli/pixelchat.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/z799gs/c9c9c9@main/googl/pixelchat.css">
   
   <style>
     body {
@@ -19,10 +19,10 @@
 </head>
 <body>
   <div id="pixel-chat-container"></div>
-  <script src="https://cdn.jsdelivr.net/gh/z799gs/c9c9c9@main/fli/pixelchat.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/z799gs/c9c9c9@main/googl/pixelchat.js"></script>
   
   <script>
-    PixelChatApp.setApiUrl('https://script.google.com/macros/s/AKfycbyP1xL6FZzLdXK4uSwXs-xp5Oejuc_Vf_r4_3FDRLlajw4vHMFVhu0MIvmHHDE1o8kF/exec');
+    PixelChatApp.setApiUrl('https://script.google.com/macros/s/AKfycby_DeW_6VNTNJRjrAyObiHxNlbfO-ixuoCDFz-iSh3z0p7akfrdoJZIBT0-vdcQrs3u/exec');
     PixelChatApp.init('pixel-chat-container');
   </script>
  
