@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+<ModulePrefs title="Pixel Chat" />
+<Content type="html"><![CDATA[
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/z799gs/c9c9c9@main/z6/pixelchat.css">
+</head>
+<body style="margin:0;padding:10px;background:transparent;">
+  <div id="pixel-chat-container"></div>
+  <script src="https://cdn.jsdelivr.net/gh/z799gs/c9c9c9@main/z6/pixelchat.js"></script>
+  <script>
+    // Server URL'lerini ayarla
+    PixelChatApp.setServers(
+      'https://script.google.com/macros/s/AKfycby_DeW_6VNTNJRjrAyObiHxNlbfO-ixuoCDFz-iSh3z0p7akfrdoJZIBT0-vdcQrs3u/exec',
+      'https://script.google.com/macros/s/AKfycbzb8iWUXVDRbVpAzY6bcJwGvNP9SmxbWXwUjR9NAlnyGyiF-TJVTxUowBBih0VaoziH/exec'
+    );
+    PixelChatApp.init('pixel-chat-container');
+  </script>
+</body>
+</html>
+]]></Content>
+</Module>
