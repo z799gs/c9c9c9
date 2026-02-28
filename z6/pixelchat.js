@@ -41,9 +41,11 @@ const PixelChatApp = (function() {
     isAdmin: false,
     quota: 0,
     zoom: 1,
-    tool: 'pixel', // pixel, fill, eyedrop
+    tool: 'pixel',
     showGrid: true,
-    hoverPixel: null
+    hoverPixel: null,
+    failCount: 0, // Bağlantı hatası sayacı
+    autoSwitched: false // Otomatik geçiş yapıldı mı
   };
 
   let el = {};
@@ -57,8 +59,9 @@ const PixelChatApp = (function() {
 
     state.username = localStorage.getItem('pc_user') || '';
     state.avatar = localStorage.getItem('pc_avatar') || 'male';
-    state.server = parseInt(localStorage.getItem('pc_server')) || 1;
-    state.apiUrl = SERVERS[state.server] || SERVERS[1];
+    // Varsayılan her zaman Server 1
+    state.server = 1;
+    state.apiUrl = SERVERS[1];
 
     render(container);
 
@@ -117,8 +120,8 @@ const PixelChatApp = (function() {
             
             <div class="header-center">
               <div class="server-switch">
-                <button class="server-btn ${state.server===1?'active':''}" data-server="1">Server 1</button>
-                <button class="server-btn ${state.server===2?'active':''}" data-server="2">Server 2</button>
+                <button class="server-btn active" data-server="1">Server 1</button>
+                <button class="server-btn" data-server="2">Server 2</button>
               </div>
               <div class="quota-bar">
                 <div class="quota-fill" id="quota-fill"></div>
@@ -383,6 +386,8 @@ const PixelChatApp = (function() {
     state.lastTs = 0;
     state.displayed.clear();
     state.pixels = {};
+    state.failCount = 0; // Hata sayacını sıfırla
+    // autoSwitched'ı sıfırlama - kullanıcı manuel geçiş yapınca bile diğer server'a tekrar auto-switch olabilir
     
     localStorage.setItem('pc_server', num);
     
@@ -397,22 +402,20 @@ const PixelChatApp = (function() {
   }
 
   // ==========================================
-  // STATUS / QUOTA
+  // STATUS / QUOTA (sadece gösterim, auto-switch yok)
   // ==========================================
   async function checkStatus() {
     try {
-      const res = await fetch(state.apiUrl + '?action=getStatus');
+      const res = await fetch(state.apiUrl + '?action=getStatus', {
+        signal: AbortSignal.timeout(5000)
+      });
       const data = await res.json();
       if (data.success) {
         state.quota = data.quotaUsed || 0;
         el.quotaFill.style.width = state.quota + '%';
         el.quotaText.textContent = state.quota + '%';
         el.quotaFill.className = 'quota-fill ' + (state.quota > 80 ? 'high' : (state.quota > 50 ? 'mid' : ''));
-        
-        // Auto switch if overloaded
-        if (data.status === 'overloaded' && state.server === 1) {
-          switchServer(2);
-        }
+        // Auto-switch kaldırıldı - sadece disconnected olunca geçecek
       }
     } catch(e) {}
   }
@@ -623,11 +626,14 @@ const PixelChatApp = (function() {
     state.fetching = true;
 
     try {
-      const res = await fetch(state.apiUrl + `?action=getMessages&room=${state.room}&since=${state.lastTs}`);
+      const res = await fetch(state.apiUrl + `?action=getMessages&room=${state.room}&since=${state.lastTs}`, {
+        signal: AbortSignal.timeout(8000) // 8 saniye timeout
+      });
       const data = await res.json();
 
       if (data.success) {
         setStatus(true);
+        state.failCount = 0; // Başarılı, sayacı sıfırla
 
         const newMsgs = data.messages.filter(m => !state.displayed.has(m.timestamp));
         if (newMsgs.length) {
@@ -635,12 +641,31 @@ const PixelChatApp = (function() {
           newMsgs.forEach(m => state.displayed.add(m.timestamp));
           state.lastTs = data.messages[data.messages.length - 1].timestamp;
         }
+      } else {
+        handleConnectionError();
       }
     } catch(e) {
-      setStatus(false);
+      handleConnectionError();
     }
 
     state.fetching = false;
+  }
+
+  function handleConnectionError() {
+    state.failCount++;
+    setStatus(false);
+    
+    // 3 ardışık hata sonrası ve henüz otomatik geçiş yapılmadıysa
+    if (state.failCount >= 3 && !state.autoSwitched) {
+      const otherServer = state.server === 1 ? 2 : 1;
+      state.autoSwitched = true;
+      
+      showNotif('⚠️ Server busy, switching to Server ' + otherServer);
+      
+      setTimeout(() => {
+        switchServer(otherServer);
+      }, 1000);
+    }
   }
 
   function renderMessages(msgs) {
