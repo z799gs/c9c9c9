@@ -1,13 +1,13 @@
 // ==========================================
-// PIXEL CHAT V3 - Full Featured
+// PIXEL CHAT V4 - XSS Protected, No Admin
 // ==========================================
 
 const PixelChatApp = (function() {
   'use strict';
 
   const SERVERS = {
-    1: 'https://script.google.com/macros/s/AKfycby_DeW_6VNTNJRjrAyObiHxNlbfO-ixuoCDFz-iSh3z0p7akfrdoJZIBT0-vdcQrs3u/exec',
-    2: 'https://script.google.com/macros/s/AKfycbzb8iWUXVDRbVpAzY6bcJwGvNP9SmxbWXwUjR9NAlnyGyiF-TJVTxUowBBih0VaoziH/exec'
+    1: 'https://script.google.com/macros/s/SERVER_1_URL/exec',
+    2: 'https://script.google.com/macros/s/SERVER_2_URL/exec'
   };
 
   const CONFIG = {
@@ -38,17 +38,50 @@ const PixelChatApp = (function() {
     fetching: false,
     canPlace: true,
     pixels: {},
-    isAdmin: false,
     quota: 0,
     zoom: 1,
     tool: 'pixel',
     showGrid: true,
-    hoverPixel: null,
-    failCount: 0, // Bağlantı hatası sayacı
-    autoSwitched: false // Otomatik geçiş yapıldı mı
+    failCount: 0,
+    autoSwitched: false
   };
 
   let el = {};
+
+  // ==========================================
+  // XSS PROTECTION - CLIENT SIDE
+  // ==========================================
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function detectXSS(text) {
+    if (!text) return false;
+    const patterns = [
+      /<script/i, /<img/i, /<svg/i, /<iframe/i,
+      /javascript:/i, /on\w+=/i, /onerror/i, /onload/i,
+      /<[^>]+>/
+    ];
+    for (let p of patterns) {
+      if (p.test(text)) return true;
+    }
+    return false;
+  }
+
+  function xssWarning() {
+    console.clear();
+    console.log('%c⚠️ STOP! ⚠️', 'color: red; font-size: 50px; font-weight: bold;');
+    console.log('%cYou pathetic script kiddie! 🖕', 'color: orange; font-size: 24px;');
+    console.log('%cThinking you can hack this with your copy-pasted XSS payloads?', 'color: yellow; font-size: 16px;');
+    console.log('%cGo back to watching YouTube tutorials, loser! 😂', 'color: lime; font-size: 16px;');
+    console.log('%cYour IP has been logged. Have a nice day! 🎉', 'color: cyan; font-size: 14px;');
+    console.log('%c' + '═'.repeat(50), 'color: red;');
+    console.log('%cSeriously though, XSS is blocked on both client and server.', 'color: gray; font-size: 12px;');
+    console.log('%cAll inputs are escaped. Nice try, but no cigar. 🚭', 'color: gray; font-size: 12px;');
+  }
 
   // ==========================================
   // INIT
@@ -59,7 +92,6 @@ const PixelChatApp = (function() {
 
     state.username = localStorage.getItem('pc_user') || '';
     state.avatar = localStorage.getItem('pc_avatar') || 'male';
-    // Varsayılan her zaman Server 1
     state.server = 1;
     state.apiUrl = SERVERS[1];
 
@@ -321,6 +353,14 @@ const PixelChatApp = (function() {
   // ==========================================
   function handleLogin() {
     const name = el.loginName.value.trim();
+    
+    // XSS Check
+    if (detectXSS(name)) {
+      xssWarning();
+      shake(el.loginName);
+      return;
+    }
+    
     if (!name || name.length < 2 || name.length > 12) {
       shake(el.loginName);
       return;
@@ -335,7 +375,6 @@ const PixelChatApp = (function() {
     localStorage.setItem('pc_user', name);
     localStorage.setItem('pc_avatar', state.avatar);
 
-    // Save profile
     fetch(state.apiUrl, {
       method: 'POST', mode: 'no-cors',
       headers: {'Content-Type': 'application/json'},
@@ -353,7 +392,6 @@ const PixelChatApp = (function() {
     state.lastTs = 0;
     state.displayed.clear();
     state.pixels = {};
-    state.isAdmin = false;
 
     localStorage.removeItem('pc_user');
 
@@ -367,7 +405,7 @@ const PixelChatApp = (function() {
   function showApp() {
     el.login.classList.add('hidden');
     el.main.classList.remove('hidden');
-    el.userName.textContent = state.username;
+    el.userName.textContent = escapeHtml(state.username);
     el.userAvatar.textContent = state.avatar === 'female' ? '👧' : '👦';
     el.userBadge.className = 'user-badge ' + state.avatar;
     el.currentColor.style.background = state.color;
@@ -386,8 +424,7 @@ const PixelChatApp = (function() {
     state.lastTs = 0;
     state.displayed.clear();
     state.pixels = {};
-    state.failCount = 0; // Hata sayacını sıfırla
-    // autoSwitched'ı sıfırlama - kullanıcı manuel geçiş yapınca bile diğer server'a tekrar auto-switch olabilir
+    state.failCount = 0;
     
     localStorage.setItem('pc_server', num);
     
@@ -402,7 +439,7 @@ const PixelChatApp = (function() {
   }
 
   // ==========================================
-  // STATUS / QUOTA (sadece gösterim, auto-switch yok)
+  // STATUS / QUOTA
   // ==========================================
   async function checkStatus() {
     try {
@@ -415,7 +452,6 @@ const PixelChatApp = (function() {
         el.quotaFill.style.width = state.quota + '%';
         el.quotaText.textContent = state.quota + '%';
         el.quotaFill.className = 'quota-fill ' + (state.quota > 80 ? 'high' : (state.quota > 50 ? 'mid' : ''));
-        // Auto-switch kaldırıldı - sadece disconnected olunca geçecek
       }
     } catch(e) {}
   }
@@ -473,7 +509,7 @@ const PixelChatApp = (function() {
     if (state.tool === 'eyedrop') {
       const key = x + '_' + y;
       if (state.pixels[key]) {
-        state.color = state.pixels[key];
+        state.color = state.pixels[key].color || state.pixels[key];
         el.currentColor.style.background = state.color;
         document.querySelectorAll('.color-swatch').forEach(s => {
           s.classList.toggle('selected', s.dataset.color === state.color);
@@ -494,10 +530,10 @@ const PixelChatApp = (function() {
     const key = x + '_' + y;
     const info = state.pixels[key];
     
-    if (info && typeof info === 'object') {
-      el.pixelInfo.textContent = `[${x},${y}] by ${info.user || '?'}`;
+    if (info && info.user) {
+      el.pixelInfo.textContent = `[${x},${y}] by ${escapeHtml(info.user)}`;
     } else if (info) {
-      el.pixelInfo.textContent = `[${x},${y}] ${info}`;
+      el.pixelInfo.textContent = `[${x},${y}] colored`;
     } else {
       el.pixelInfo.textContent = `[${x},${y}] empty`;
     }
@@ -505,18 +541,23 @@ const PixelChatApp = (function() {
 
   async function placePixel(x, y, color) {
     state.canPlace = false;
-    const cd = state.isAdmin ? 300 : 800;
+    const cd = 800;
     startCooldown(cd);
 
-    // Optimistic update
     updatePixel(x, y, color, state.username);
 
     try {
-      await fetch(state.apiUrl, {
-        method: 'POST', mode: 'no-cors',
+      const res = await fetch(state.apiUrl, {
+        method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ action: 'setPixel', x, y, color, username: state.username })
       });
+      const data = await res.json();
+      
+      // XSS attempt detected by server
+      if (data.xss) {
+        xssWarning();
+      }
     } catch(e) {}
 
     setTimeout(() => { state.canPlace = true; }, cd);
@@ -557,7 +598,7 @@ const PixelChatApp = (function() {
     state.lastTs = 0;
     state.displayed.clear();
     el.roomName.textContent = state.room;
-    el.messages.innerHTML = `<div class="chat-system">Joined #${state.room}</div>`;
+    el.messages.innerHTML = `<div class="chat-system">Joined #${escapeHtml(state.room)}</div>`;
     fetchMessages();
   }
 
@@ -568,10 +609,10 @@ const PixelChatApp = (function() {
     const msg = el.msgInput.value.trim();
     if (!msg) return;
 
-    // Admin command
-    if (msg.toLowerCase().startsWith('/admin ')) {
+    // Client-side XSS check
+    if (detectXSS(msg)) {
+      xssWarning();
       el.msgInput.value = '';
-      await tryAdmin(msg.substring(7).trim());
       return;
     }
 
@@ -579,8 +620,8 @@ const PixelChatApp = (function() {
     el.msgInput.disabled = true;
 
     try {
-      await fetch(state.apiUrl, {
-        method: 'POST', mode: 'no-cors',
+      const res = await fetch(state.apiUrl, {
+        method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           action: 'sendMessage',
@@ -590,6 +631,14 @@ const PixelChatApp = (function() {
           avatar: state.avatar
         })
       });
+      
+      const data = await res.json();
+      
+      // XSS attempt detected by server
+      if (data.xss) {
+        xssWarning();
+      }
+      
       setTimeout(fetchMessages, 400);
     } catch(e) {
       el.msgInput.value = msg;
@@ -599,41 +648,19 @@ const PixelChatApp = (function() {
     el.msgInput.focus();
   }
 
-  async function tryAdmin(code) {
-    try {
-      await fetch(state.apiUrl, {
-        method: 'POST', mode: 'no-cors',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ action: 'sendMessage', room: '_admin_', username: state.username, message: '/admin ' + code })
-      });
-      
-      setTimeout(async () => {
-        const res = await fetch(state.apiUrl + '?action=getConfig&username=' + encodeURIComponent(state.username));
-        const data = await res.json();
-        if (data.isAdmin) {
-          state.isAdmin = true;
-          el.userBadge.classList.add('admin');
-          showNotif('👑 Admin granted!');
-        } else {
-          alert('Invalid code');
-        }
-      }, 1500);
-    } catch(e) {}
-  }
-
   async function fetchMessages() {
     if (state.fetching) return;
     state.fetching = true;
 
     try {
       const res = await fetch(state.apiUrl + `?action=getMessages&room=${state.room}&since=${state.lastTs}`, {
-        signal: AbortSignal.timeout(8000) // 8 saniye timeout
+        signal: AbortSignal.timeout(8000)
       });
       const data = await res.json();
 
       if (data.success) {
         setStatus(true);
-        state.failCount = 0; // Başarılı, sayacı sıfırla
+        state.failCount = 0;
 
         const newMsgs = data.messages.filter(m => !state.displayed.has(m.timestamp));
         if (newMsgs.length) {
@@ -655,7 +682,6 @@ const PixelChatApp = (function() {
     state.failCount++;
     setStatus(false);
     
-    // 3 ardışık hata sonrası ve henüz otomatik geçiş yapılmadıysa
     if (state.failCount >= 3 && !state.autoSwitched) {
       const otherServer = state.server === 1 ? 2 : 1;
       state.autoSwitched = true;
@@ -672,22 +698,42 @@ const PixelChatApp = (function() {
     msgs.forEach(m => {
       const own = m.username === state.username;
       const div = document.createElement('div');
-      div.className = 'chat-msg' + (own ? ' own' : '') + (m.isAdmin ? ' admin' : '');
+      div.className = 'chat-msg' + (own ? ' own' : '');
       
       const avatar = m.avatar === 'female' ? '👧' : '👦';
-      const badge = m.isAdmin ? '<span class="admin-tag">★</span>' : '';
       const time = new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
       
-      div.innerHTML = `
-        <div class="msg-avatar ${m.avatar}">${avatar}</div>
-        <div class="msg-body">
-          <div class="msg-header">
-            <span class="msg-name">${esc(m.username)}${badge}</span>
-            <span class="msg-time">${time}</span>
-          </div>
-          <div class="msg-text">${esc(m.message)}</div>
-        </div>
-      `;
+      // Already escaped by server, but double check with textContent
+      const msgBody = document.createElement('div');
+      msgBody.className = 'msg-body';
+      
+      const msgHeader = document.createElement('div');
+      msgHeader.className = 'msg-header';
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'msg-name';
+      nameSpan.textContent = m.username; // textContent for safety
+      
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'msg-time';
+      timeSpan.textContent = time;
+      
+      msgHeader.appendChild(nameSpan);
+      msgHeader.appendChild(timeSpan);
+      
+      const msgText = document.createElement('div');
+      msgText.className = 'msg-text';
+      msgText.textContent = m.message; // textContent for safety - NO innerHTML!
+      
+      msgBody.appendChild(msgHeader);
+      msgBody.appendChild(msgText);
+      
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'msg-avatar ' + m.avatar;
+      avatarDiv.textContent = avatar;
+      
+      div.appendChild(avatarDiv);
+      div.appendChild(msgBody);
       
       el.messages.appendChild(div);
     });
@@ -720,9 +766,6 @@ const PixelChatApp = (function() {
       const data = await res.json();
 
       if (data.success) {
-        state.isAdmin = data.isAdmin;
-        if (data.isAdmin) el.userBadge.classList.add('admin');
-        
         el.pixelCount.textContent = data.totalPixels || 0;
         el.resetTime.textContent = (data.hoursUntilReset || 24) + 'h';
       }
@@ -759,12 +802,6 @@ const PixelChatApp = (function() {
   function shake(elem) {
     elem.classList.add('shake');
     setTimeout(() => elem.classList.remove('shake'), 400);
-  }
-
-  function esc(s) {
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
   }
 
   function showNotif(text) {
